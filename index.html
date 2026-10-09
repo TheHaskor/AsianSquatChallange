@@ -41,11 +41,27 @@
     </p>
 
     <!-- Calendar Sync Card -->
-    <div id="signup" class="max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-emerald-950/20">
-      <h3 class="text-xl font-bold text-white mb-2">Start Your Challenge Now</h3>
-      <p class="text-slate-400 text-sm mb-6">
-        Click below to instantly generate and import all 30 daily micro-drills directly into your calendar starting today.
+    <div id="signup" class="max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-emerald-950/20 text-left">
+      <h3 class="text-xl font-bold text-white mb-2 text-center">Start Your Challenge Now</h3>
+      <p class="text-slate-400 text-sm mb-6 text-center">
+        Select your preferred daily practice time to generate your personalized 30-day schedule:
       </p>
+
+      <!-- Time Selector -->
+      <div class="mb-5">
+        <label for="practiceTime" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+          ⏰ Preferred Daily Reminder Time
+        </label>
+        <select id="practiceTime" class="w-full bg-slate-950 border border-slate-700 text-white font-medium rounded-xl p-3 focus:outline-none focus:border-emerald-500 transition">
+          <option value="07">Morning (07:00 AM)</option>
+          <option value="08" selected>Morning (08:00 AM)</option>
+          <option value="09">Morning (09:00 AM)</option>
+          <option value="12">Midday (12:00 PM)</option>
+          <option value="17">Afternoon (05:00 PM)</option>
+          <option value="19">Evening (07:00 PM)</option>
+          <option value="21">Night (09:00 PM)</option>
+        </select>
+      </div>
 
       <button onclick="downloadDynamicICS()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-4 px-6 rounded-xl transition duration-200 transform active:scale-[0.98] shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
         <span>📅</span> Add 30-Day Schedule to Calendar
@@ -175,6 +191,8 @@
       const coffeeUrl = "https://buymeacoffee.com/asiansquatchallange";
       const certUrl = "https://op97h86kdchs26sa.public.blob.vercel-storage.com/gemini-svg%20%281%29.svg";
 
+      const selectedHour = document.getElementById("practiceTime") ? document.getElementById("practiceTime").value : "08";
+
       const titles = [
         "Supported Squat Hold", "Doorframe Decompression", "Supported Heel Drive", "Gentle Joint Unload",
         "Supported Squat Pulse", "Frame-Assisted Sit", "Supported Hold Check-In", "Ankle Rock in Squat",
@@ -219,30 +237,36 @@
         "Settle into an unassisted Asian squat and hold for a full 5 minutes. Breathe steadily, heels down, knees over toes. You did it — 30 days complete!\n\nOfficial Graduation Certificate: " + certUrl
       ];
 
-      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Asian Squat Mobility Challenge//EN\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n";
+      let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Asian Squat Mobility Challenge//EN\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
       
       const today = new Date();
 
       for (let i = 0; i < 30; i++) {
         const dayNum = i + 1;
         const eventDate = new Date(today);
-        eventDate.setDate(today.getDate() + i); // מתחיל מהיום
+        eventDate.setDate(today.getDate() + i);
 
-        const dateStr = eventDate.toISOString().replace(/-|T|:|\.\d\d\d/g, "").substring(0, 8);
+        const year = eventDate.getFullYear();
+        const month = String(eventDate.getMonth() + 1).padStart(2, '0');
+        const day = String(eventDate.getDate()).padStart(2, '0');
+        
+        const dtStart = `${year}${month}${day}T${selectedHour}0000`;
+        const dtEnd = `${year}${month}${day}T${selectedHour}1500`;
 
         let desc = descriptions[i];
 
-        // הוספת קישור תרומה רק ימים שמתחלקים ב-3 (3, 6, 9, 12, 15, 18, 21, 24, 27, 30)
         if (dayNum % 3 === 0) {
           desc += "\\n\\nEnjoying the daily mobility gains? Buy me a coffee ($3): " + coffeeUrl;
         }
 
-        icsContent += `BEGIN:VEVENT\n`;
-        icsContent += `UID:day${dayNum}-asian-squat-${dateStr}@asiansquatchallenge\n`;
-        icsContent += `DTSTART;VALUE=DATE:${dateStr}\n`;
-        icsContent += `SUMMARY:🧘‍♂️ Day ${dayNum}: ${titles[i]}\n`;
-        icsContent += `DESCRIPTION:${desc}\n`;
-        icsContent += `END:VEVENT\n`;
+        icsContent += "BEGIN:VEVENT\r\n";
+        icsContent += `UID:day${dayNum}-asian-squat-${year}${month}${day}@asiansquatchallenge\r\n`;
+        icsContent += `DTSTAMP:${year}${month}${day}T000000Z\r\n`;
+        icsContent += `DTSTART:${dtStart}\r\n`;
+        icsContent += `DTEND:${dtEnd}\r\n`;
+        icsContent += `SUMMARY:🧘‍♂️ Day ${dayNum}: ${titles[i]}\r\n`;
+        icsContent += `DESCRIPTION:${desc}\r\n`;
+        icsContent += "END:VEVENT\r\n";
       }
 
       icsContent += "END:VCALENDAR";
